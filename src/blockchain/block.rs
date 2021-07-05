@@ -10,21 +10,14 @@ pub struct Block {
 
 impl Block {
     pub fn new(index: usize, proof: Option<i32>, previous_hash: Option<String>) -> Self {
-        let proof = match proof {
-            Some(p) => p,
-            None => 1,
-        };
-
-        let previous_hash = match previous_hash {
-            Some(ph) => ph,
-            None => String::from("0"),
-        };
+        let proof = proof.unwrap_or(1);
+        let previous_hash = previous_hash.unwrap_or_else(|| String::from("0"));
 
         Self {
-            index: index,
+            index,
             timestamp: Utc::now().to_rfc3339_opts(SecondsFormat::Millis, false),
-            proof: proof,
-            previous_hash: previous_hash,
+            proof,
+            previous_hash,
         }
     }
 }
