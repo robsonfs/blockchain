@@ -1,4 +1,6 @@
+use super::create_hash;
 use chrono::{SecondsFormat, Utc};
+use std::fmt;
 
 #[derive(Debug, Clone)]
 pub struct Block {
@@ -19,6 +21,21 @@ impl Block {
             proof,
             previous_hash,
         }
+    }
+
+    pub fn get_hash(&self) -> String {
+        create_hash(&self.to_string())
+    }
+}
+
+impl fmt::Display for Block {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let s = format!(
+            "Index: {}, Timestamp: {}, Proof: {}, PreviousHash: {}",
+            &self.index, &self.timestamp, &self.proof, &self.previous_hash
+        );
+        fmt.write_str(&s)?;
+        Ok(())
     }
 }
 
@@ -45,5 +62,16 @@ mod tests {
         let genesis = Block::new(1, None, None);
 
         assert_eq!(genesis.previous_hash, String::from("0"));
+    }
+
+    #[test]
+    fn test_get_hash() {
+        let mut genesis = Block::new(1, None, None);
+        genesis.timestamp = String::from("Fixedtimestamp");
+
+        assert_eq!(
+            genesis.get_hash(),
+            String::from("c8937d0f547422f8d469e6b75c754ed15b51b2b8525f12cd7d1276ce5a1ab899")
+        );
     }
 }

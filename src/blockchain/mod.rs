@@ -4,7 +4,8 @@ use block::Block;
 use digest::Digest;
 use sha2::Sha256;
 
-fn create_hash(msg: &str, mut hasher: Sha256) -> String {
+fn create_hash(msg: &str) -> String {
+    let mut hasher = Sha256::default();
     hasher.update(msg);
     format!("{:x}", hasher.finalize())
 }
@@ -42,12 +43,11 @@ impl Blockchain {
     pub fn proof_of_work(&self, previous_proof: ProofType) -> usize {
         let mut new_proof: ProofType = 1;
         let mut check_proof = false;
-        let hasher = Sha256::new();
 
         while !check_proof {
             let solution = {
                 let s = (new_proof.pow(2) - previous_proof.pow(2)).to_string();
-                create_hash(&s, hasher.clone())
+                create_hash(&s)
             };
 
             if &solution[..4] == "0000" {
@@ -113,7 +113,7 @@ mod tests {
     fn test_create_hash() {
         let msg = "Hello World!";
         let expected = "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069";
-        assert_eq!(expected, create_hash(msg, Sha256::new()));
+        assert_eq!(expected, create_hash(msg));
     }
 
     #[test]
