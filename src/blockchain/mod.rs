@@ -58,6 +58,36 @@ impl Blockchain {
         }
         new_proof as usize
     }
+
+    pub fn is_chain_valid(&self) -> bool {
+        match self.chain.len() {
+            0 => true,
+            1 => {
+                let block = self.chain[0].clone();
+                (block.proof == 1) && (&block.previous_hash == "0")
+            }
+            _ => {
+                let mut result = true;
+                for block in self.chain[1..].iter() {
+                    let previous_block = self.chain[block.index - 1].clone();
+                    let previous_hash = previous_block.get_hash();
+                    if previous_hash != block.previous_hash {
+                        result = false;
+                        break;
+                    }
+                    let solution = {
+                        let s = (block.proof.pow(2) - previous_block.proof.pow(2)).to_string();
+                        create_hash(&s)
+                    };
+                    if &solution[..4] != "0000" {
+                        result = false;
+                        break;
+                    }
+                }
+                result
+            }
+        }
+    }
 }
 
 impl Default for Blockchain {
@@ -121,5 +151,41 @@ mod tests {
         let blockchain = Blockchain::new();
         let proof = blockchain.proof_of_work(42);
         assert_eq!(1822, proof);
+    }
+
+    #[test]
+    fn test_is_chain_valid_empty_chain() {
+        let blockchain = Blockchain::default();
+        assert!(
+            blockchain.is_chain_valid(),
+            "An empty chain must always be valid"
+        );
+    }
+
+    #[test]
+    fn test_is_chain_valid_unit_chain_valid_cases() {
+        let mut valid_blockchain = Blockchain::default();
+        let _ = valid_blockchain.create_block(1, String::from("0"));
+        assert!(
+            valid_blockchain.is_chain_valid(),
+            "An unity chain is valid if proof=1 and previous_hash=String::from(\"0\")"
+        );
+    }
+
+    #[test]
+    fn test_is_chain_valid_unit_chain_invalid_cases() {
+        let mut bchain_1 = Blockchain::default();
+        let mut bchain_2 = Blockchain::default();
+        let mut bchain_3 = Blockchain::default();
+
+        bchain_1.create_block(42, String::from("0"));
+        bchain_2.create_block(1, String::from("42"));
+        bchain_3.create_block(42, String::from("42"));
+
+        let bchains = vec![bchain_1, bchain_2, bchain_3];
+
+        for bchain in bchains.iter() {
+            assert!(!bchain.is_chain_valid());
+        }
     }
 }
